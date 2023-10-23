@@ -4,6 +4,7 @@ FROM node:20.8-alpine
 ARG JWT_SECRET
 ARG DATABASE_URL
 ARG PORT
+ARG DATABASE_URL_LOCAL
 
 ENV JWT_SECRET=$JWT_SECRET
 ENV DATABASE_URL=$DATABASE_URL
@@ -23,6 +24,8 @@ RUN npm prune --omit=dev
 RUN npx prisma generate
 RUN npx prisma migrate deploy
 
+ENV DATABASE_URL=$DATABASE_URL_LOCAL
+ENV NODE_ENV=production
 
 
 EXPOSE $PORT
