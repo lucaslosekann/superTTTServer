@@ -1,0 +1,90 @@
+{
+	"Pino info": {
+		"prefix": "log",
+		"body": [
+			"logger.info('$1');",
+			"$0"
+		],
+		"description": "Pino logger info"
+	},
+
+	"New controller template": {
+		"prefix": "controller",
+		"body": [
+			"import { NextFunction, Request, Response } from \"express\";",
+			"import HttpError from \"../Helpers/HttpError\";",
+			"import HttpResponse from \"../Helpers/HttpResponse\";",
+			"",
+			"import $1Schema from \"../Schemas/$1Schema\";",
+			"import $1Model from \"../Models/$1Model\";",
+			"",
+			"export async function get(req: Request, res: Response, next: NextFunction) {",
+			"",
+			"    throw HttpError.NotImplemented(\"Not Implemented\")",
+			"}",
+			"",
+			"export async function update(req: Request, res: Response, next: NextFunction) {",
+			"",
+			"    throw HttpError.NotImplemented(\"Not Implemented\")",
+			"}",
+			"",
+			"export async function create(req: Request, res: Response, next: NextFunction) {",
+			"",
+			"    throw HttpError.NotImplemented(\"Not Implemented\")",
+			"}",
+			"",
+			"export async function index(req: Request, res: Response, next: NextFunction) {",
+			"",
+			"    throw HttpError.NotImplemented(\"Not Implemented\")",
+			"}",
+			"",
+			"export async function remove(req: Request, res: Response, next: NextFunction) {",
+			"",
+			"    throw HttpError.NotImplemented(\"Not Implemented\")",
+			"}"
+		]
+	},
+
+	"New model template": {
+		"prefix": "model",
+		"body": [
+			"import { BaseDAO } from 'ts-dynamodb-sdk';",
+			"",
+			"// This is a simple example of a model that extends BaseDAO",
+			"// It will be used in the controllers to access the database",
+			"// The name of the table is passed to the constructor",
+			"// The name of the table is the same as the name of the model",
+			"",
+			"export interface I$1Model {",
+			"    id: string;",
+			"}",
+			"",
+			"export default class $1Model extends BaseDAO<I$1Model> {",
+			"    constructor() {",
+			"        super(\"$1Table\");",
+			"    }",
+			"",
+			"};"
+		]
+	},
+
+	"New router template": {
+		"prefix": "router",
+		"body": [
+			"import { Router } from \"express\";",
+			"import RequestHandler from \"../Helpers/RequestHandler\";",
+			"",
+			"import * as $1Controller from \"../Controllers/$1Controller\";",
+			"",
+			"const ${2:$1} = Router();",
+			"",
+			"$2.get(\"/\", RequestHandler($1Controller.index));",
+			"$2.get(\"/:id\", RequestHandler($1Controller.get));",
+			"$2.post(\"/\", RequestHandler($1Controller.create));",
+			"$2.put(\"/:id\", RequestHandler($1Controller.update));",
+			"$2.delete(\"/:id\", RequestHandler($1Controller.remove));",
+			"",
+			"export default $2;"
+		]
+	}
+}
