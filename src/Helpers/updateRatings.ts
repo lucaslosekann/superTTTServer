@@ -1,19 +1,21 @@
 import prisma from "../db";
 
-export default async function updateRatings(tie: boolean, winnerId: number, loserId: number, k: number = 32) {
-    const winner = await prisma.user.findUnique({ where: { id: winnerId } })
-    if (!winner) throw new Error("Winner not found");
-    const loser = await prisma.user.findUnique({ where: { id: loserId } });
-    if (!loser) throw new Error("Winner not found");
+export default async function updateRatings(winnerId: number | null, player1Id: number, player2Id: number, k: number = 32) {
+    const player1 = await prisma.user.findUnique({ where: { id: player1Id } })
+    if (!player1) throw new Error("Winner not found");
+    const player2 = await prisma.user.findUnique({ where: { id: player2Id } });
+    if (!player2) throw new Error("Winner not found");
 
-    const winnerExpected = 1 / (1 + Math.pow(10, (loser.rating - winner.rating) / 400));
-    const loserExpected = 1 / (1 + Math.pow(10, (winner.rating - loser.rating) / 400));
+    const player1Expected = 1 / (1 + Math.pow(10, (player2.rating - player1.rating) / 400));
+    const loserExpected = 1 / (1 + Math.pow(10, (player1.rating - player2.rating) / 400));
 
-    const winnerNewRating = winner.rating + k * (tie ? 0.5 : 1 - winnerExpected);
-    const loserNewRating = loser.rating + k * (tie ? 0.5 : 0 - loserExpected);
 
-    await prisma.user.update({ where: { id: winnerId }, data: { rating: winnerNewRating } })
-    await prisma.user.update({ where: { id: loserId }, data: { rating: loserNewRating } })
+    const player1Winner = winnerId == player1Id;
+    const player1NewRating = player1.rating + k * ((!winnerId ? 0.5 : player1Winner  ? 1 : 0) - player1Expected);
+    const player2NewRating = player2.rating + k * ((!winnerId ? 0.5 : !player1Winner ? 1 : 0) - loserExpected);
 
-    return [winnerNewRating, loserNewRating, winner.rating, loser.rating];
+    await prisma.user.update({ where: { id: player1Id }, data: { rating: player1NewRating } })
+    await prisma.user.update({ where: { id: player2Id }, data: { rating: player2NewRating } })
+
+    return [player1NewRating, player2NewRating, player1.rating, player2.rating];
 }

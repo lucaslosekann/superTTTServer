@@ -1,7 +1,10 @@
 import { ENV } from '../server';
 import { NextFunction, Request, Response } from 'express';
-import jwt from 'jsonwebtoken';
+import jwt, { JwtPayload } from 'jsonwebtoken';
 import HttpError from '../Helpers/HttpError';
+import { Socket } from 'socket.io';
+import WsService from '../Services/WsService';
+import { ExtendedError } from 'socket.io/dist/namespace';
 
 
 export function verifyToken(req: Request, _: Response, next: NextFunction) {
@@ -22,4 +25,20 @@ export function verifyToken(req: Request, _: Response, next: NextFunction) {
     } catch (e) {
         next(e);
     }
+}
+
+
+export const WsAuth = (socket: Socket, next: (err?: ExtendedError | undefined)=>void) => {
+    const token = socket.handshake.auth.token;
+    if (!token) return next(new Error('Authentication error'));
+    let user: JwtPayload;
+    try {
+        user = jwt.verify(token, ENV.JWT_SECRET) as JwtPayload;
+    } catch (error) {
+        return next(new Error('Authentication error'));
+    }
+    if (!user.id) return next(new Error('Authentication error'));
+    socket.data.user = user;
+    if (Array.from(WsService.io.sockets.sockets.values()).find(s => s.data.user.id === user.id)) return next(new Error('User already connected'));
+    next();
 }
