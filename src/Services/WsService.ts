@@ -164,7 +164,7 @@ class Ws {
                 }
 
                 //Check if block is full
-                if (game.board[i][j].board.every((row) => row.every((cell) => cell != null))) {
+                if (game.board[i][j].board.every((row) => row.every((cell) => cell != null)) && !didWinSub) {
                     game.board[i][j].state = "T";
                 }
 
