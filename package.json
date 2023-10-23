@@ -1,11 +1,12 @@
 {
-  "name": "api-base",
+  "name": "superttt-server",
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
   "scripts": {
-    "dev": "bun run --watch src/server.ts --platform=linux/arm64",
-    "node-dev": "ts-node-dev src/server.ts --respawn --transpile-only --no-notify --watch "
+    "build": "tsc -p .",
+    "start": "node dist/server.js",
+    "dev": "ts-node-dev src/server.ts --respawn --transpile-only --no-notify --watch"
   },
   "author": "",
   "license": "ISC",
