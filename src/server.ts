@@ -1,3 +1,4 @@
+import _ from './index';
 import dotenv from 'dotenv';
 dotenv.config()
 import EnvSchema from './Schemas/EnvSchema';
