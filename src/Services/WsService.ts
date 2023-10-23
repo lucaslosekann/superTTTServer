@@ -298,6 +298,9 @@ class Ws {
                         } else {
                             game.player2Time = Number((game.player2Time - 100).toFixed(2));
                         }
+                        const player1Socket = Array.from(this.io.sockets.sockets.values()).find(s => s.data.user.id === game.player1);
+                        const player2Socket = Array.from(this.io.sockets.sockets.values()).find(s => s.data.user.id === game.player2);
+                        if(!player1Socket || !player2Socket) return;
                         if(game.player1Time <= 0){
                             clearInterval(counter);
 
@@ -318,9 +321,6 @@ class Ws {
                             })
 
                             this.ongoingGames.delete(`${game.player1}-${game.player2}`)
-                            const player1Socket = Array.from(this.io.sockets.sockets.values()).find(s => s.data.user.id === game.player1);
-                            const player2Socket = Array.from(this.io.sockets.sockets.values()).find(s => s.data.user.id === game.player2);
-                            if(!player1Socket || !player2Socket) return;
 
                             player1Socket.emit('game-ended', {
                                 winner: false,
@@ -352,10 +352,7 @@ class Ws {
                                 }
                             })
 
-                            this.ongoingGames.delete(`${game.player1}-${game.player2}`)
-                            const player1Socket = Array.from(this.io.sockets.sockets.values()).find(s => s.data.user.id === game.player1);
-                            const player2Socket = Array.from(this.io.sockets.sockets.values()).find(s => s.data.user.id === game.player2);
-                            if(!player1Socket || !player2Socket) return;
+                            this.ongoingGames.delete(`${game.player1}-${game.player2}`) 
 
                             player1Socket.emit('game-ended', {
                                 winner: true,
@@ -369,8 +366,9 @@ class Ws {
                             })
                             return;
                         }
+
                         this.ongoingGames.set(`${id}-${player2[0]}`, game)
-                        this.io.to(player.socketId).to(player2[1].socketId).emit('time-update', {
+                        this.io.to(player1Socket.id).to(player2Socket.id).emit('time-update', {
                             player1: {
                                 id: game.player1,
                                 time: game.player1Time
