@@ -9,8 +9,8 @@ import updateRatings from '../Helpers/updateRatings';
 const INITIAL_MAX_DIFFERENCE = 32;
 const MATCHMAKING_INTERVAL = 700;
 
-// const MAX_TIME_MS = 1000 * 60 * 5;
-const MAX_TIME_MS = 1000 * 10;
+const MAX_TIME_MS = 1000 * 60 * 5;
+// const MAX_TIME_MS = 1000 * 10;
 
 class Ws {
     public io: SocketServer
@@ -29,7 +29,8 @@ class Ws {
         player1Time: number,
         player2Time: number,
         counter: NodeJS.Timeout | null,
-        startedAt: Date
+        startedAt: Date,
+        dbMatchId: number
     }>();
 
     public init(server: SocketServer) {
@@ -97,6 +98,10 @@ class Ws {
                 if (game.board[i][j].state) return;
 
 
+
+
+
+
                 const opponent = game.player1 === user.id ? game.player2 : game.player1;
                 const opponentSocket = Array.from(this.io.sockets.sockets.values()).find(s => s.data.user.id === opponent);
                 if (!opponentSocket) return;
@@ -107,6 +112,20 @@ class Ws {
                 game.board[i][j].board[k][l] = game.player1 === user.id ? game.player1Symbol :
                 game.player1Symbol === "X" ? "O" : "X";
 
+
+                await prisma.move.create({
+                    data: {
+                        i,
+                        j,
+                        k,
+                        l,
+                        symbol: game.board[i][j].board[k][l]!,
+                        userId: user.id,
+                        matchId: game.dbMatchId
+                    }
+                })
+
+
                 const didWinSub = checkTTTWinner(game.board[i][j].board, game.board[i][j].board[k][l]!);
                 if (didWinSub) {
                     game.board[i][j].state = game.board[i][j].board[k][l];
@@ -115,8 +134,11 @@ class Ws {
                 const didWin = checkTTTWinner(game.board.map((l1) => l1.map(l2 => l2.state == "T" ? null : l2.state)), game.board[i][j].board[k][l]!);
                 
                 if(didWin){
-                    const [newRa, newRb, oldRa, oldRb] = await updateRatings(false, game.player1, game.player2);
-                    await prisma.match.create({
+                    const [newRa, newRb, oldRa, oldRb] = await updateRatings(false, user.id, opponent);
+                    await prisma.match.update({
+                        where: {
+                            id: game.dbMatchId
+                        },
                         data: {
                             creationDate: game.startedAt,
                             user1Id: user.id,
@@ -151,8 +173,11 @@ class Ws {
                 if (game.board[k][l].board.every((row) => row.every((cell) => cell != null)) || !!game.board[k][l].state) {
                     if (game.board[i][j].board.every((row) => row.every((cell) => cell != null)) || !!game.board[i][j].state) {
                         if (game.board.every((row) => row.every((cell) => cell.board.every((row) => row.every((cell) => cell != null))))) {
-                            const [newRa, newRb, oldRa, oldRb] = await updateRatings(true, game.player1, game.player2);
-                            await prisma.match.create({
+                            const [newRa, newRb, oldRa, oldRb] = await updateRatings(true, user.id, opponent);
+                            await prisma.match.update({
+                                where: {
+                                    id: game.dbMatchId
+                                },
                                 data: {
                                     creationDate: game.startedAt,
                                     user1Id: user.id,
@@ -167,14 +192,16 @@ class Ws {
 
                             this.ongoingGames.delete(`${game.player1}-${game.player2}`)
                             socket.emit('game-ended', {
-                                winner: true,
+                                winner: false,
                                 rating: newRa,
-                                diff: newRa - oldRa
+                                diff: newRa - oldRa,
+                                tie: true
                             })
                             opponentSocket.emit('game-ended', {
                                 winner: false,
                                 rating: newRb,
-                                diff: newRb - oldRb
+                                diff: newRb - oldRb,
+                                tie: true
                             })
                             return;
                         } else {
@@ -232,6 +259,19 @@ class Ws {
                     this.searchingGames.delete(player2[0])
                     const player1Symbol = Math.random() > 0.5 ? "X" : "O";
 
+                    const match = await prisma.match.create({
+                        data: {
+                            creationDate: new Date(),
+                            user1Id: id,
+                            user2Id: player2[0],
+                            winnerId: null,
+                            user1Rating: player.rating,
+                            user2Rating: player2[1].rating,
+                            endDate: null,
+                            user1Symbol: player1Symbol
+                        }
+                    })
+
                     this.ongoingGames.set(`${id}-${player2[0]}`, {
                         player1: id,
                         player2: player2[0],
@@ -245,7 +285,8 @@ class Ws {
                         player1Time: MAX_TIME_MS,
                         player2Time: MAX_TIME_MS,
                         counter: null,
-                        startedAt: new Date()
+                        startedAt: new Date(),
+                        dbMatchId: match.id
                     })
                     this.io.to(player.socketId).to(player2[1].socketId).emit('match-found', { matchId: `${id}-${player2[0]}` })
                     await new Promise((resolve) => setTimeout(resolve, 1000))
@@ -261,14 +302,17 @@ class Ws {
                             clearInterval(counter);
 
                             const [newRa, newRb, oldRa, oldRb] = await updateRatings(false, game.player2, game.player1);
-                            await prisma.match.create({
+                            await prisma.match.update({
+                                where: {
+                                    id: game.dbMatchId
+                                },
                                 data: {
                                     creationDate: game.startedAt,
                                     user1Id: game.player1,
                                     user2Id: game.player2,
                                     winnerId: game.player2,
-                                    user1Rating: oldRa,
-                                    user2Rating: oldRb,
+                                    user1Rating: oldRb,
+                                    user2Rating: newRa,
                                     endDate: new Date()
                                 }
                             })
@@ -280,20 +324,23 @@ class Ws {
 
                             player1Socket.emit('game-ended', {
                                 winner: false,
-                                rating: newRa,
-                                diff: newRa - oldRa
+                                rating: newRb,
+                                diff: newRb - oldRb
                             })
                             player2Socket.emit('game-ended', {
                                 winner: true,
-                                rating: newRb,
-                                diff: newRb - oldRb
+                                rating: newRa,
+                                diff: newRa - oldRa
                             })
                             return;
                         }else if(game.player2Time <= 0){
                             clearInterval(counter);
 
                             const [newRa, newRb, oldRa, oldRb] = await updateRatings(false, game.player1, game.player2);
-                            await prisma.match.create({
+                            await prisma.match.update({
+                                where: {
+                                    id: game.dbMatchId
+                                },
                                 data: {
                                     creationDate: game.startedAt,
                                     user1Id: game.player1,

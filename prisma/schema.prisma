@@ -14,8 +14,23 @@ model Match {
   winnerId     Int?
   user1Rating  Int
   user2Rating  Int
+  user1Symbol  String
   creationDate DateTime  @default(now())
   endDate      DateTime?
+  movements    Move[]
+}
+
+model Move {
+  id           Int      @id @default(autoincrement())
+  matchId      Int
+  match        Match    @relation(fields: [matchId], references: [id])
+  userId       Int
+  symbol       String
+  i            Int
+  j            Int
+  k            Int
+  l            Int
+  creationDate DateTime @default(now())
 }
 
 model User {
