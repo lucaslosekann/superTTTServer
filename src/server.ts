@@ -28,6 +28,7 @@ import { ErrorMiddleware } from './Helpers/RequestHandler';
 
 import UsersRouter from './Routers/UsersRouter';
 import MatchesRouter from './Routers/MatchesRouter';
+import RankingRouter from './Routers/RankingRouter';
 
 app.use(express.json())
 app.use(express.urlencoded({ extended: true }))
@@ -42,6 +43,7 @@ app.use('/v1', apiV1Router);
 //Routers
 apiV1Router.use("/users", UsersRouter)
 apiV1Router.use("/matches", MatchesRouter)
+apiV1Router.use("/ranking", RankingRouter)
 
 app.use(ErrorMiddleware);
 server.listen(ENV.PORT, () => logger.info("Api it's running " + ENV.PORT));
