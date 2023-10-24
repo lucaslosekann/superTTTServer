@@ -40,3 +40,11 @@ model User {
   password String
   rating   Int
 }
+
+model Friend {
+  userId   Int
+  friendId Int
+  status   String
+
+  @@id([userId, friendId])
+}
