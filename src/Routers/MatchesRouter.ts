@@ -7,5 +7,6 @@ import { verifyToken } from "../Middlewares/Auth";
 const Matches = Router();
 
 Matches.get("/last", verifyToken, RequestHandler(MatchesController.getLastMatches));
+Matches.get("/:id",  verifyToken, RequestHandler(MatchesController.get));
 
 export default Matches;

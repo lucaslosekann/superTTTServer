@@ -2,6 +2,7 @@ import { NextFunction, Request, Response } from "express";
 import HttpError from "../Helpers/HttpError";
 import HttpResponse from "../Helpers/HttpResponse";
 import prisma from "../db";
+import { GetMatchSchema } from "../Schemas/MatchesSchema";
 
 
 export async function getLastMatches(req: Request, res: Response, next: NextFunction) {
@@ -32,4 +33,34 @@ export async function getLastMatches(req: Request, res: Response, next: NextFunc
 
 
     return HttpResponse.Ok(matches ?? []);
+}
+
+export async function get(req: Request, res: Response, next: NextFunction) {
+    const { id } = await GetMatchSchema.parseAsync(req.params);
+
+    const match = await prisma.match.findUnique({
+        where: {
+            id: Number(id)
+        },
+        include: {
+            movements: {
+                select: {
+                    i: true,
+                    j: true,
+                    k: true,
+                    l: true,
+                    userId: true,
+                    symbol: true,
+                    creationDate: true,
+                },
+                orderBy: {
+                    creationDate: "asc"
+                }
+            }
+        }
+    });
+
+    if (!match) throw HttpError.NotFound("Partida não encontrada");
+
+    return HttpResponse.Ok(match);
 }
