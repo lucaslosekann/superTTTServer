@@ -61,6 +61,6 @@ export async function get(req: Request, res: Response, next: NextFunction) {
     });
 
     if (!match) throw HttpError.NotFound("Partida não encontrada");
-
+    if (match.user1Id != req.decoded?.id && match.user2Id != req.decoded?.id) throw HttpError.NotFound("Partida não encontrada");
     return HttpResponse.Ok(match);
 }
