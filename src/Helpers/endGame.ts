@@ -30,6 +30,7 @@ export default async function endGame(winnerId: number | null, user1Id: number, 
             diff: newP1R - oldP1R,
             tie: !winnerId
         })
+        player1Socket.leave(`${game.player1}-${game.player2}`)
     }
     const opponentSocket = Array.from(WsService.io.sockets.sockets.values()).find(s => s.data.user.id === game.player2);
 
@@ -40,5 +41,6 @@ export default async function endGame(winnerId: number | null, user1Id: number, 
             diff: newP2R - oldP2R,
             tie: !winnerId
         })
+        opponentSocket.leave(`${game.player1}-${game.player2}`)
     }
 }
