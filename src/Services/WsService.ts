@@ -1,6 +1,6 @@
 import { Server as SocketServer } from 'socket.io';
 import { WsAuth } from '../Middlewares/Auth';
-import playingGamesUpdater from '../Game/playingGamesUpdater';
+import menuInfoUpdater from '../Game/menuInfoUpdater';
 import findGame from '../Game/Events/find-game';
 import readyToPlay from '../Game/Events/ready-to-play';
 import matchMaking from '../Game/MatchMaking';
@@ -32,6 +32,7 @@ class Ws {
     public initialized: boolean = false;
     public searchingGames = new Map<number, PlayerSearching>();
     public ongoingGames = new Map<string, OngoingGame>();
+    public isUpdating = false;
 
     public init(server: SocketServer) {
         if (this.initialized) return;
@@ -42,7 +43,7 @@ class Ws {
 
         this.io.on('connection', (socket) => {
             const user = socket.data.user;
-            const playingGamesUpdaterInterval = playingGamesUpdater(socket, user, 1000);
+            const menuInfoUpdaterInterval = menuInfoUpdater(socket, user, 1000);
 
 
             socket.on('find-game', findGame(socket, user));
@@ -57,7 +58,7 @@ class Ws {
 
             socket.on('disconnect', () => {
                 this.searchingGames.delete(user.id);
-                clearInterval(playingGamesUpdaterInterval);
+                clearInterval(menuInfoUpdaterInterval);
             });
         });
         

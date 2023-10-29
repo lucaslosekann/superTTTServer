@@ -26,6 +26,9 @@ export default function matchMaking() {
             WsService.searchingGames.delete(id)
             WsService.searchingGames.delete(player2[0])
             
+            if (WsService.isUpdating) return;
+            
+            
             const player1Symbol = Math.random() > 0.5 ? "X" : "O";
 
             const match = await prisma.match.create({

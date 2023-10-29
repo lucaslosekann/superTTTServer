@@ -4,6 +4,8 @@ const EnvSchema = z.object({
     //PROD
     JWT_SECRET: z.string(),
     DATABASE_URL: z.string(),
+    API_KEY: z.string(),
+    
     //DEV
     NODE_ENV: z.enum(["development", "test", "production"]).optional(),
     PORT: z.string().optional().default("8000").transform((val) => Number(val)),

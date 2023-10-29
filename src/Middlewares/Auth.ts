@@ -42,3 +42,16 @@ export const WsAuth = (socket: Socket, next: (err?: ExtendedError | undefined)=>
     if (Array.from(WsService.io.sockets.sockets.values()).find(s => s.data.user.id === user.id)) return next(new Error('User already connected'));
     next();
 }
+
+
+export const verifyApiKey = (req: Request, _: Response, next: NextFunction) => {
+    try {
+        const apiKey = req.headers['x-api-key'];
+        if (!apiKey) throw HttpError.Unauthorized("Header 'x-api-key' is missing");
+        if (typeof apiKey != 'string') throw HttpError.Unauthorized("Header 'x-api-key' is not a string");
+        if (apiKey !== ENV.API_KEY) throw HttpError.Unauthorized("Invalid API Key");
+        next();
+    } catch (e) {
+        next(e);
+    }
+}
