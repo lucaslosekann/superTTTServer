@@ -15,7 +15,7 @@ export async function index(req: Request, res: Response, next: NextFunction) {
             name: true,
             rating: true
         },
-        take: 10
+        // take: 10
     });
 
     return HttpResponse.Ok(users);
