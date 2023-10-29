@@ -15,6 +15,10 @@ export async function getLastMatches(req: Request, res: Response, next: NextFunc
             WHEN M."user1Id" = ${userId} THEN U2.name
             WHEN M."user2Id" = ${userId} THEN U1.name
         END AS opponent_name,
+        CASE
+            WHEN M."user1Id" = ${userId} THEN U2.id
+            WHEN M."user2Id" = ${userId} THEN U1.id
+        END AS opponent_id,
         M."winnerId",
         M."creationDate",
         M."endDate"
