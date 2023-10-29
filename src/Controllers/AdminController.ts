@@ -6,6 +6,6 @@ import WsService from "../Services/WsService";
 
 export async function toggleUpdating(req: Request, res: Response, next: NextFunction) {
     WsService.isUpdating = !WsService.isUpdating;
-    
+    WsService.searchingGames.clear();
     return HttpResponse.Ok({ isUpdating: WsService.isUpdating });
 }

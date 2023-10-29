@@ -30,6 +30,7 @@ import UsersRouter from './Routers/UsersRouter';
 import MatchesRouter from './Routers/MatchesRouter';
 import RankingRouter from './Routers/RankingRouter';
 import FriendsRouter from './Routers/FriendsRouter';
+import AdminRouter from './Routers/AdminRouter';
 
 app.use(express.json())
 app.use(express.urlencoded({ extended: true }))
@@ -46,6 +47,7 @@ apiV1Router.use("/users", UsersRouter)
 apiV1Router.use("/matches", MatchesRouter)
 apiV1Router.use("/ranking", RankingRouter)
 apiV1Router.use("/friends", FriendsRouter)
+apiV1Router.use("/admin", AdminRouter)
 
 app.use(ErrorMiddleware);
 server.listen(ENV.PORT, () => logger.info("Api it's running " + ENV.PORT));
