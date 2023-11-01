@@ -1,7 +1,7 @@
 import { NextFunction, Request, Response } from "express";
 import HttpError from "../Helpers/HttpError";
 import HttpResponse from "../Helpers/HttpResponse";
-import { AcceptRequestSchema, SendRequestSchema } from "../Schemas/FriendsSchema";
+import { AcceptRequestSchema, SendRequestByMatchId, SendRequestSchema } from "../Schemas/FriendsSchema";
 import prisma from "../db";
 
 export async function sendRequest(req: Request, res: Response, next: NextFunction) {
@@ -81,6 +81,35 @@ export async function index(req: Request, res: Response, next: NextFunction) {
         where ("userId" = ${req.decoded.id} OR "friendId" = ${req.decoded.id})
     `
     return HttpResponse.Ok(friends ?? [])
+}
+
+export async function sendRequestByMatchId(req: Request, res: Response, next: NextFunction) {
+    const { matchId } = await SendRequestByMatchId.parseAsync(req.body);
+    if (!req.decoded?.id) throw HttpError.InternalServerError("Algo deu errado, tente recarregar a página")
+    const match = await prisma.match.findUnique({ where: { id: matchId } });
+    if (!match) throw HttpError.BadRequest("Partida não encontrada")
+    if(match.user1Id != req.decoded.id && match.user2Id != req.decoded.id) throw HttpError.BadRequest("Você não pode enviar uma solicitação de amizade para uma partida que você não participou")
+    const friendId = match.user1Id === req.decoded.id ? match.user2Id : match.user1Id;
+    const request = await prisma.friend.findFirst({
+        where: {
+            OR: [
+                { userId: req.decoded.id, friendId },
+                { userId: friendId, friendId: req.decoded.id }
+            ]
+        }
+    })
+    if (request?.status === "ACCEPTED") throw HttpError.BadRequest("Você já é amigo dessa pessoa")
+    if (request) throw HttpError.BadRequest("Já existe uma solicitação de amizade entre vocês")
+
+    const data = await prisma.friend.create({
+        data: {
+            userId: req.decoded.id,
+            friendId,
+            status: "PENDING"
+        }
+    })
+
+    return HttpResponse.Ok(data)
 }
 
 
