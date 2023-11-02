@@ -1,7 +1,7 @@
 import { NextFunction, Request, Response } from "express";
 import HttpError from "../Helpers/HttpError";
 import HttpResponse from "../Helpers/HttpResponse";
-import { AcceptRequestSchema, SendRequestByMatchId, SendRequestSchema } from "../Schemas/FriendsSchema";
+import { AcceptRequestSchema, RemoveFriendSchema, SendRequestByMatchId, SendRequestSchema } from "../Schemas/FriendsSchema";
 import prisma from "../db";
 
 export async function sendRequest(req: Request, res: Response, next: NextFunction) {
@@ -114,6 +114,25 @@ export async function sendRequestByMatchId(req: Request, res: Response, next: Ne
 
 
 export async function remove(req: Request, res: Response, next: NextFunction) {
+    const { userId } = await RemoveFriendSchema.parseAsync(req.params);
+    if (!req.decoded?.id) throw HttpError.InternalServerError("Algo deu errado, tente recarregar a página")
+    const request = await prisma.friend.findFirst({
+        where: {
+            OR: [
+                { userId: req.decoded.id, friendId: Number(userId) },
+                { userId: Number(userId), friendId: req.decoded.id }
+            ]
+        }
+    });
+    if (!request) throw HttpError.BadRequest("Amizade não encontrada")
+    if (request.friendId !== req.decoded.id && request.userId !== req.decoded.id) throw HttpError.BadRequest("Você não pode remover uma amizade que não é sua");
+    
+    const data = await prisma.friend.delete({
+        where: { userId_friendId:{
+            userId: request.userId,
+            friendId: request.friendId
+        } },
+    })
 
-    throw HttpError.NotImplemented("Not Implemented")
+    return HttpResponse.Ok(data)
 }
