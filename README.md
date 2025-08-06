@@ -1,1 +1,1 @@
-Client: [https://github.com/lucaslosekann/superTTTServer](https://github.com/lucaslosekann/superTTTClient/)
+Client: [https://github.com/lucaslosekann/superTTTClient](https://github.com/lucaslosekann/superTTTClient/)
